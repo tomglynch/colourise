@@ -1,0 +1,108 @@
+{
+    "parent_directories": [
+        "~/prog",
+        "~/cydarm"
+    ],
+    "colors": [
+        {
+            "name": "Orange",
+            "background": "#FF6600",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Reddish Orange",
+            "background": "#FF3366",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Magenta",
+            "background": "#CC0066",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Purple",
+            "background": "#660099",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Blue",
+            "background": "#3333CC",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Cyan",
+            "background": "#0066CC",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Teal",
+            "background": "#009999",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Green",
+            "background": "#33CC66",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Light Green",
+            "background": "#66CC00",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Yellow Green",
+            "background": "#99CC00",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Yellow",
+            "background": "#FFFF00",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Orange Yellow",
+            "background": "#FFCC00",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Orange",
+            "background": "#FF9900",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Brown",
+            "background": "#CC6600",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Gray",
+            "background": "#999999",
+            "foreground": "#000000"
+        },
+        {
+            "name": "Dark Gray",
+            "background": "#666666",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Darker Gray",
+            "background": "#333333",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Black",
+            "background": "#000000",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Red",
+            "background": "#990000",
+            "foreground": "#FFFFFF"
+        },
+        {
+            "name": "Dark Blue",
+            "background": "#0000CC",
+            "foreground": "#FFFFFF"
+        }
+    ]
+} 
