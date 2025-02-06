@@ -43,9 +43,9 @@ This script helps you manage unique color themes for your VS Code workspaces, ma
 
 ## Usage
 
-1. **Basic Usage**:
+1. **Basic Usage to add colours to new workspaces**:
    ```bash
-   python workspace_color_customizer.py
+   python workspace_color_customizer.py --skip-existing
    ```
 
 2. **Practice Mode** (preview without changes):
