@@ -4,7 +4,7 @@ import os
 import random
 import sys
 import colorsys
-from color_generator import generate_distinct_colors
+from color_generator import generate_distinct_colors, rgb_to_hex, xyz_to_rgb, lab_to_xyz
 
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
@@ -16,6 +16,33 @@ def rgb_to_hsl(rgb):
     r, g, b = [x/255.0 for x in rgb]
     h, l, s = colorsys.rgb_to_hls(r, g, b)
     return (h, s, l)
+
+def hsl_to_rgb(hsl):
+    """Convert HSL tuple to RGB tuple."""
+    h, s, l = hsl
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    return (int(r*255), int(g*255), int(b*255))
+
+def boost_vibrancy(hex_color, saturation_boost=0.2, lightness_adjust=0.05):
+    """Boost the vibrancy of a color by increasing saturation and adjusting lightness."""
+    rgb = hex_to_rgb(hex_color)
+    h, s, l = rgb_to_hsl(rgb)
+    
+    # Boost saturation but cap at 1.0
+    s = min(1.0, s + saturation_boost)
+    
+    # Adjust lightness for better visibility
+    # For dark colors, lighten them; for light colors, darken them
+    if l < 0.4:
+        l = min(0.65, l + lightness_adjust)
+    elif l > 0.85:
+        l = max(0.55, l - lightness_adjust)
+    
+    # Convert back to RGB
+    r, g, b = hsl_to_rgb((h, s, l))
+    
+    # Convert to hex
+    return f"#{r:02x}{g:02x}{b:02x}".upper()
 
 def sort_colors_by_hue(colors):
     """Sort color pairs by hue of the background color."""
@@ -35,28 +62,34 @@ def get_color_name(hex_color):
     # Convert hue to degrees (0-360)
     hue = h * 360
     
-    # Determine base color name from hue
-    if hue < 15 or hue >= 345:
+    # Determine base color name from hue with more orange variants
+    if hue < 10 or hue >= 350:
         base_name = "Red"
-    elif hue < 45:
-        base_name = "Orange-Red"
-    elif hue < 75:
+    elif hue < 25:
+        base_name = "Red-Orange"
+    elif hue < 40:
         base_name = "Orange"
-    elif hue < 105:
+    elif hue < 55:
+        base_name = "Orange-Yellow"
+    elif hue < 70:
+        base_name = "Yellow-Orange"
+    elif hue < 85:
         base_name = "Yellow"
-    elif hue < 135:
+    elif hue < 110:
         base_name = "Yellow-Green"
-    elif hue < 165:
+    elif hue < 150:
         base_name = "Green"
-    elif hue < 195:
+    elif hue < 180:
+        base_name = "Teal"
+    elif hue < 210:
         base_name = "Cyan"
-    elif hue < 225:
-        base_name = "Light Blue"
-    elif hue < 255:
+    elif hue < 240:
         base_name = "Blue"
-    elif hue < 285:
+    elif hue < 275:
+        base_name = "Indigo"
+    elif hue < 300:
         base_name = "Purple"
-    elif hue < 315:
+    elif hue < 325:
         base_name = "Magenta"
     else:
         base_name = "Pink"
@@ -77,21 +110,71 @@ def get_color_name(hex_color):
         return f"{intensity} {base_name}"
     return base_name
 
-# Generate a larger set of distinct colors
+def create_orange_boost_function(hue_range, saturation_boost=0.15):
+    """
+    Create a function that enhances orange tones in a specific hue range.
+    """
+    def boost_orange(hex_color):
+        rgb = hex_to_rgb(hex_color)
+        h, s, l = rgb_to_hsl(rgb)
+        
+        # Convert hue to degrees for easier comparison
+        hue = h * 360
+        
+        # Check if it's in the orange range
+        if hue_range[0] <= hue <= hue_range[1]:
+            # Boost oranges more for better visibility
+            s = min(1.0, s + saturation_boost)
+            l = max(0.4, min(0.6, l))  # Keep lightness in good range
+            
+            # Convert back to RGB and hex
+            r, g, b = hsl_to_rgb((h, s, l))
+            return f"#{r:02x}{g:02x}{b:02x}".upper()
+        
+        return hex_color
+    
+    return boost_orange
+
+# Generate a larger set of distinct colors with custom parameters
 def get_color_palette(num_colors=60):
-    """Generate a palette of distinct colors ordered by hue."""
-    color_pairs = generate_distinct_colors(num_colors)
+    """Generate a palette of vibrant, distinct colors with good orange representation."""
+    # Create a specific orange booster for the orange hue range (20-60 degrees)
+    orange_booster = create_orange_boost_function((20, 60), 0.25)
     
-    # Sort colors by hue
-    color_pairs = sort_colors_by_hue(color_pairs)
+    # Generate more colors than we need to allow filtering
+    extra_factor = 1.5
+    raw_colors = generate_distinct_colors(int(num_colors * extra_factor), 
+                                         min_distance=15,  # Lower min_distance to get more variety
+                                         min_contrast=2.0)  # Higher min_contrast for better differentiation
     
+    # Apply vibrancy boost to all colors and orange boost to orange colors
+    enhanced_colors = []
+    for bg, fg in raw_colors:
+        # Apply the orange boost first if it's in the orange range
+        boosted_bg = orange_booster(bg)
+        # Then apply the general vibrancy boost
+        vibrant_bg = boost_vibrancy(boosted_bg, saturation_boost=0.25, lightness_adjust=0.1)
+        enhanced_colors.append((vibrant_bg, fg))
+    
+    # Sort by hue to ensure even distribution
+    sorted_colors = sort_colors_by_hue(enhanced_colors)
+    
+    # Take only the colors we need, ensuring even spacing around the color wheel
+    selected_colors = []
+    step = len(sorted_colors) / num_colors
+    for i in range(num_colors):
+        index = int(i * step)
+        if index < len(sorted_colors):
+            selected_colors.append(sorted_colors[index])
+    
+    # Create dictionaries with names
     return [
         {
             "name": get_color_name(bg),
             "background": bg.upper(),
             "foreground": fg
         }
-        for i, (bg, fg) in enumerate(color_pairs)
+        for bg, fg in selected_colors
     ]
 
 # Global color palette - generated once when module is loaded

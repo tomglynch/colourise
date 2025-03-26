@@ -1,11 +1,9 @@
 {
     "workbench.colorCustomizations": {
-        "titleBar.activeBackground": "#990000",
+        "titleBar.activeBackground": "#DD002A",
         "titleBar.activeForeground": "#FFFFFF",
-        "titleBar.inactiveBackground": "#990000",
+        "titleBar.inactiveBackground": "#DD002A",
         "titleBar.inactiveForeground": "#FFFFFF",
-        "titleBar.border": "#990000"
-    },
-    "gitdoc.enabled": true,
-    "gitdoc.filePattern": "**/*.py",
+        "titleBar.border": "#DD002A"
+    }
 }
