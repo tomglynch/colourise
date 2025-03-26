@@ -78,7 +78,7 @@ def get_color_name(hex_color):
     return base_name
 
 # Generate a larger set of distinct colors
-def get_color_palette(num_colors=40):
+def get_color_palette(num_colors=60):
     """Generate a palette of distinct colors ordered by hue."""
     color_pairs = generate_distinct_colors(num_colors)
     
