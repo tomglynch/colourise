@@ -3,15 +3,91 @@ import json
 import os
 import random
 import sys
+import colorsys
 from color_generator import generate_distinct_colors
+
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hsl(rgb):
+    """Convert RGB tuple to HSL tuple."""
+    r, g, b = [x/255.0 for x in rgb]
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    return (h, s, l)
+
+def sort_colors_by_hue(colors):
+    """Sort color pairs by hue of the background color."""
+    def get_hue(color_pair):
+        bg_color = color_pair[0]
+        rgb = hex_to_rgb(bg_color)
+        hsl = rgb_to_hsl(rgb)
+        return hsl[0]  # Hue value
+    
+    return sorted(colors, key=get_hue)
+
+def get_color_name(hex_color):
+    """Generate a descriptive name for a color based on its hue."""
+    rgb = hex_to_rgb(hex_color)
+    h, s, l = rgb_to_hsl(rgb)
+    
+    # Convert hue to degrees (0-360)
+    hue = h * 360
+    
+    # Determine base color name from hue
+    if hue < 15 or hue >= 345:
+        base_name = "Red"
+    elif hue < 45:
+        base_name = "Orange-Red"
+    elif hue < 75:
+        base_name = "Orange"
+    elif hue < 105:
+        base_name = "Yellow"
+    elif hue < 135:
+        base_name = "Yellow-Green"
+    elif hue < 165:
+        base_name = "Green"
+    elif hue < 195:
+        base_name = "Cyan"
+    elif hue < 225:
+        base_name = "Light Blue"
+    elif hue < 255:
+        base_name = "Blue"
+    elif hue < 285:
+        base_name = "Purple"
+    elif hue < 315:
+        base_name = "Magenta"
+    else:
+        base_name = "Pink"
+    
+    # Add intensity modifier based on lightness and saturation
+    if l < 0.2:
+        intensity = "Dark"
+    elif l > 0.8:
+        intensity = "Light"
+    elif s < 0.3:
+        intensity = "Muted"
+    elif s > 0.7:
+        intensity = "Vibrant"
+    else:
+        intensity = ""
+    
+    if intensity:
+        return f"{intensity} {base_name}"
+    return base_name
 
 # Generate a larger set of distinct colors
 def get_color_palette(num_colors=40):
-    """Generate a palette of distinct colors."""
+    """Generate a palette of distinct colors ordered by hue."""
     color_pairs = generate_distinct_colors(num_colors)
+    
+    # Sort colors by hue
+    color_pairs = sort_colors_by_hue(color_pairs)
+    
     return [
         {
-            "name": f"Color {i+1}",
+            "name": get_color_name(bg),
             "background": bg.upper(),
             "foreground": fg
         }
@@ -45,11 +121,11 @@ def get_user_choice():
         print("Invalid choice. Please enter 'y', 'r', 'n', or 's'")
 
 def display_numbered_colours():
-    """Display all colours with numbers for selection."""
-    print(f"\nAvailable colours (total: {len(COLOURS)}):")
+    """Display all colours with numbers for selection, ordered by hue."""
+    print(f"\nAvailable colours (total: {len(COLOURS)}, ordered by color spectrum):")
     for i, colour in enumerate(COLOURS, 1):
         preview = show_colour_preview(colour['background'], colour['foreground'])
-        print(f"{i:2}. {colour['name']}: {preview} ({colour['background']}, {colour['foreground']})")
+        print(f"{i:2}. {preview} {colour['name']} ({colour['background']})")
     print()
 
 def select_colour_by_number():
@@ -151,13 +227,13 @@ def colourise_workspace(practice_mode=False):
 
 def show_all_colours():
     """Display all available colours."""
-    print(f"\nTotal number of colours: {len(COLOURS)}\n")
-    for colour in COLOURS:
+    print(f"\nTotal number of colours: {len(COLOURS)} (ordered by color spectrum)\n")
+    for i, colour in enumerate(COLOURS, 1):
         preview = show_colour_preview(colour['background'], colour['foreground'])
-        print(f"{colour['name']}:")
-        print(f"Preview: {preview}")
-        print(f"Background: {colour['background']}")
-        print(f"Foreground: {colour['foreground']}")
+        print(f"{i:2}. {colour['name']}:")
+        print(f"    Preview: {preview}")
+        print(f"    Background: {colour['background']}")
+        print(f"    Foreground: {colour['foreground']}")
         print()
 
 def main():
