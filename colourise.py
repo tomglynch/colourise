@@ -39,10 +39,36 @@ def show_colour_preview(bg_colour, fg_colour):
 def get_user_choice():
     """Get user input for colour choice."""
     while True:
-        choice = input("\nAccept this colour? (y)es/(r)egenerate/(n)o: ").lower()
-        if choice in ['y', 'r', 'n']:
+        choice = input("\nAccept this colour? (y)es/(r)egenerate/(n)o/(s)elect from list: ").lower()
+        if choice in ['y', 'r', 'n', 's']:
             return choice
-        print("Invalid choice. Please enter 'y', 'r', or 'n'")
+        print("Invalid choice. Please enter 'y', 'r', 'n', or 's'")
+
+def display_numbered_colours():
+    """Display all colours with numbers for selection."""
+    print(f"\nAvailable colours (total: {len(COLOURS)}):")
+    for i, colour in enumerate(COLOURS, 1):
+        preview = show_colour_preview(colour['background'], colour['foreground'])
+        print(f"{i:2}. {colour['name']}: {preview} ({colour['background']}, {colour['foreground']})")
+    print()
+
+def select_colour_by_number():
+    """Let user select a colour by number."""
+    display_numbered_colours()
+    
+    while True:
+        try:
+            user_input = input("Enter colour number (or 0 to cancel): ")
+            if user_input.lower() in ('0', 'cancel', 'q', 'quit'):
+                return None
+            
+            index = int(user_input) - 1
+            if 0 <= index < len(COLOURS):
+                return COLOURS[index]
+            else:
+                print(f"Please enter a number between 1 and {len(COLOURS)}")
+        except ValueError:
+            print("Please enter a valid number")
 
 def apply_colour(colour, settings_path):
     """Apply the colour to settings file."""
@@ -79,22 +105,37 @@ def colourise_workspace(practice_mode=False):
     settings_dir = os.path.join(os.getcwd(), '.vscode')
     settings_path = os.path.join(settings_dir, 'settings.json')
 
+    selected_colour = None
     while True:
-        # Get random colour
-        colour = get_random_colour()
-        preview = show_colour_preview(colour['background'], colour['foreground'])
-        
-        print(f"\nSelected colour: {colour['name']}")
-        print(f"Preview: {preview}")
-        print(f"Background: {colour['background']}")
-        print(f"Foreground: {colour['foreground']}")
+        if selected_colour is None:
+            # Get random colour
+            colour = get_random_colour()
+            preview = show_colour_preview(colour['background'], colour['foreground'])
+            
+            print(f"\nSelected colour: {colour['name']}")
+            print(f"Preview: {preview}")
+            print(f"Background: {colour['background']}")
+            print(f"Foreground: {colour['foreground']}")
+        else:
+            # Use the selected colour
+            colour = selected_colour
+            selected_colour = None  # Reset for next iteration if user regenerates
 
         if practice_mode:
             print("\nPractice mode - no changes will be made")
 
         choice = get_user_choice()
         
-        if choice == 'y':
+        if choice == 's':
+            # Let user select from list
+            selected_colour = select_colour_by_number()
+            if selected_colour:
+                continue  # Show the selected colour and ask for confirmation
+            else:
+                # User cancelled selection, go back to random colour
+                selected_colour = None
+                continue
+        elif choice == 'y':
             if not practice_mode:
                 apply_colour(colour, settings_path)
                 print(f"\nUpdated {settings_path}")
@@ -120,8 +161,18 @@ def show_all_colours():
         print()
 
 def main():
+    """
+    Main program entry point.
+    
+    Command line options:
+    --show-all   : Display all available colours with previews
+    --list       : Display all colours with number for selection
+    --practice   : Run in practice mode (no changes made to files)
+    """
     if "--show-all" in sys.argv:
         show_all_colours()
+    elif "--list" in sys.argv:
+        display_numbered_colours()
     else:
         practice_mode = "--practice" in sys.argv
         colourise_workspace(practice_mode)
