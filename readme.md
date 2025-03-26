@@ -13,6 +13,7 @@ This script helps you manage unique color themes for your VS Code workspaces, ma
 - **Interactive Workflow**:
   - Preview colors before applying
   - Accept (y), reject (n), or regenerate (r) colors for each workspace
+  - **NEW**: Select from a numbered list of all available colors (s)
   - Option to reset colors for any workspace
 - **Configuration File**: Easy to edit `config.json` for managing:
   - Parent directories to scan for workspaces
@@ -20,6 +21,7 @@ This script helps you manage unique color themes for your VS Code workspaces, ma
 - **Special Modes**:
   - `--practice`: Preview changes without modifying any files
   - `--skip-existing`: Preserve existing workspace colors
+  - **NEW**: `--list-colors`: View all available colors with their names and numbers
 
 ## Setup
 
@@ -58,6 +60,11 @@ This script helps you manage unique color themes for your VS Code workspaces, ma
    python workspace_color_customizer.py --skip-existing
    ```
 
+4. **List Colors Mode** (view all available colors):
+   ```bash
+   python workspace_color_customizer.py --list-colors
+   ```
+
 ## Workflow
 
 1. The script shows all found workspaces and their current colors
@@ -68,6 +75,7 @@ This script helps you manage unique color themes for your VS Code workspaces, ma
      - Press `y` to accept the new colors
      - Press `n` to keep existing/no colors
      - Press `r` to generate a different color suggestion
+     - Press `s` to select a color from a numbered list of all available colors
 3. After all workspaces, option to reset colors for any workspace
 
 ## Development

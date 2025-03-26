@@ -257,6 +257,49 @@ def get_random_unused_color(all_colors, used_colors):
         return None
     return random.choice(available_colors)
 
+def display_all_colors(all_colors, color_names=None):
+    """
+    Display all available colors with numbering.
+    
+    Args:
+        all_colors: List of all available color tuples.
+        color_names: Optional dictionary mapping color tuples to names.
+    """
+    print("\nAvailable colors:")
+    for i, color in enumerate(all_colors, 1):
+        bg, fg = color
+        preview = show_color_preview(bg, fg)
+        name = color_names.get(color, "") if color_names else ""
+        print(f"{i:2}. {preview} {name} ({bg}, {fg})")
+    print()
+
+def select_color_by_number(all_colors, color_names=None):
+    """
+    Let the user select a color by its number from the displayed list.
+    
+    Args:
+        all_colors: List of all available color tuples.
+        color_names: Optional dictionary mapping color tuples to names.
+        
+    Returns:
+        The selected color tuple or None if selection was canceled.
+    """
+    display_all_colors(all_colors, color_names)
+    
+    while True:
+        try:
+            user_input = input("Enter color number (or 0 to cancel): ")
+            if user_input.lower() in ('0', 'cancel', 'q', 'quit'):
+                return None
+            
+            index = int(user_input) - 1
+            if 0 <= index < len(all_colors):
+                return all_colors[index]
+            else:
+                print(f"Please enter a number between 1 and {len(all_colors)}")
+        except ValueError:
+            print("Please enter a valid number")
+
 def confirm_color(prompt):
     """
     Asks the user to accept, reject, or regenerate a color.
@@ -265,13 +308,13 @@ def confirm_color(prompt):
         prompt: The question to ask the user.
 
     Returns:
-        'y' for yes, 'n' for no, 'r' for regenerate
+        'y' for yes, 'n' for no, 'r' for regenerate, 's' for select from list
     """
     while True:
-        user_input = input(f"{prompt} (y/n/r): ").lower()
-        if user_input in ['y', 'n', 'r']:
+        user_input = input(f"{prompt} (y/n/r/s for select): ").lower()
+        if user_input in ['y', 'n', 'r', 's']:
             return user_input
-        print("Invalid input. Please enter 'y' for yes, 'n' for no, or 'r' to regenerate color.")
+        print("Invalid input. Please enter 'y' for yes, 'n' for no, 'r' to regenerate color, or 's' to select from list.")
 
 def process_workspace(workspace, existing_color, all_colors, used_colors, practice_mode=False, skip_existing=False):
     """
@@ -290,10 +333,23 @@ def process_workspace(workspace, existing_color, all_colors, used_colors, practi
     """
     workspace_name = get_workspace_name(workspace)
 
+    # Create a dictionary to map color tuples to their names
+    color_names = {}
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            for color in config.get('colors', []):
+                color_tuple = (color['background'], color['foreground'])
+                color_names[color_tuple] = color['name']
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
     if existing_color:
         print(f"\nProcessing {workspace_name} (has existing colors):")
         current_preview = show_color_preview(existing_color[0], existing_color[1])
-        print(f"Current: {current_preview} ({existing_color[0]}, {existing_color[1]})")
+        color_name = color_names.get(existing_color, "")
+        print(f"Current: {current_preview} {color_name} ({existing_color[0]}, {existing_color[1]})")
         
         if skip_existing:
             print("Skipping - already has colors")
@@ -310,16 +366,41 @@ def process_workspace(workspace, existing_color, all_colors, used_colors, practi
 
         # Show the color change
         new_preview = show_color_preview(color_palette[0], color_palette[1])
+        color_name = color_names.get(color_palette, "")
         if existing_color:
-            print(f"Suggested: {new_preview} ({color_palette[0]}, {color_palette[1]})")
+            print(f"Suggested: {new_preview} {color_name} ({color_palette[0]}, {color_palette[1]})")
         else:
-            print(f"New: {new_preview} ({color_palette[0]}, {color_palette[1]})")
+            print(f"New: {new_preview} {color_name} ({color_palette[0]}, {color_palette[1]})")
 
         if practice_mode:
             print(f"Practice mode - would write to {os.path.join(workspace, '.vscode', 'settings.json')}")
 
         response = confirm_color("Would you like these colors?")
-        if response == 'y':
+        
+        if response == 's':
+            # Let user select from list
+            selected_color = select_color_by_number(all_colors, color_names)
+            if selected_color:
+                color_palette = selected_color
+                new_preview = show_color_preview(color_palette[0], color_palette[1])
+                color_name = color_names.get(color_palette, "")
+                print(f"Selected: {new_preview} {color_name} ({color_palette[0]}, {color_palette[1]})")
+                
+                # Ask for confirmation of selected color
+                if confirm("Apply this selected color?"):
+                    if not practice_mode:
+                        used_colors.add(color_palette)
+                        customize_workspace(workspace, color_palette, practice_mode=False)
+                        print(f"Applied selected colors to {workspace_name}")
+                    else:
+                        print(f"Practice mode - would apply selected colors to {workspace_name}")
+                    return color_palette
+                else:
+                    continue  # Go back to the color selection process
+            else:
+                continue  # User canceled the selection, go back to random color
+        
+        elif response == 'y':
             if not practice_mode:
                 used_colors.add(color_palette)
                 customize_workspace(workspace, color_palette, practice_mode=False)
@@ -369,8 +450,27 @@ def main(test_mode=False):
     # Check command line arguments
     practice_mode = "--practice" in sys.argv
     skip_existing = "--skip-existing" in sys.argv
+    list_colors_only = "--list-colors" in sys.argv
     
     print_header("VS Code Workspace Color Customizer")
+    
+    # Create a dictionary to map color tuples to their names
+    color_names = {}
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            for color in config.get('colors', []):
+                color_tuple = (color['background'], color['foreground'])
+                color_names[color_tuple] = color['name']
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    
+    # If --list-colors is specified, just show the colors and exit
+    if list_colors_only:
+        print("\n🎨 Available Color Palettes:")
+        display_all_colors(all_colors, color_names)
+        return
     
     if practice_mode:
         print("\n🔍 Running in practice mode - no changes will be written")
