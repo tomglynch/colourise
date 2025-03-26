@@ -163,9 +163,7 @@ def customize_workspace(workspace_dir, color_palette, practice_mode=False):
         "titleBar.activeForeground": color_palette[1],
         "titleBar.inactiveBackground": color_palette[0],
         "titleBar.inactiveForeground": color_palette[1],
-        "titleBar.border": color_palette[0],
-        "activityBar.background": color_palette[0],
-        "activityBar.foreground": color_palette[1]
+        "titleBar.border": color_palette[0]
     }
 
     if not practice_mode:

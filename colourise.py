@@ -65,9 +65,7 @@ def apply_colour(colour, settings_path):
         "titleBar.activeForeground": colour['foreground'],
         "titleBar.inactiveBackground": colour['background'],
         "titleBar.inactiveForeground": colour['foreground'],
-        "titleBar.border": colour['background'],
-        "activityBar.background": colour['background'],
-        "activityBar.foreground": colour['foreground']
+        "titleBar.border": colour['background']
     }
 
     settings['workbench.colorCustomizations'].update(new_colours)
