@@ -4,7 +4,7 @@ import os
 import random
 import sys
 import colorsys
-from color_generator import generate_distinct_colors, rgb_to_hex, xyz_to_rgb, lab_to_xyz
+from color_generator import generate_distinct_colors, get_contrast_ratio, rgb_to_hex, xyz_to_rgb, lab_to_xyz
 
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
@@ -154,6 +154,10 @@ def get_color_palette(num_colors=60):
         boosted_bg = orange_booster(bg)
         # Then apply the general vibrancy boost
         vibrant_bg = boost_vibrancy(boosted_bg, saturation_boost=0.25, lightness_adjust=0.1)
+        # Recalculate foreground after boosting since lightness may have shifted
+        fg_white = get_contrast_ratio(vibrant_bg, "#FFFFFF")
+        fg_black = get_contrast_ratio(vibrant_bg, "#000000")
+        fg = "#FFFFFF" if fg_white > fg_black else "#000000"
         enhanced_colors.append((vibrant_bg, fg))
     
     # Sort by hue to ensure even distribution
@@ -250,7 +254,10 @@ def apply_colour(colour, settings_path):
         "titleBar.activeForeground": colour['foreground'],
         "titleBar.inactiveBackground": colour['background'],
         "titleBar.inactiveForeground": colour['foreground'],
-        "titleBar.border": colour['background']
+        "titleBar.border": colour['background'],
+        "commandCenter.foreground": colour['foreground'],
+        "commandCenter.activeForeground": colour['foreground'],
+        "commandCenter.inactiveForeground": colour['foreground']
     }
 
     settings['workbench.colorCustomizations'].update(new_colours)
